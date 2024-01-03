@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { Socket, io } from "socket.io-client";
+import { BrowserRouter, Route, Router, Routes } from "react-router-dom";
+import MainPage from "./pages/MainPage";
+import Play from "./pages/Play";
 
 function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -29,7 +32,14 @@ function App() {
     });
   }, [socket]);
 
-  return <p>Hi this is a text</p>;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/play" element={<Play />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
