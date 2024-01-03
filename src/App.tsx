@@ -1,22 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
-import { io } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 
 function App() {
+  const [socket, setSocket] = useState<Socket | null>(null);
+
   useEffect(() => {
-    const socket = io("ws://localhost:8001");
+    const socket = io("ws://localhost:8081");
+
+    setSocket(socket);
+
+    () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
     socket.connect();
 
     socket.on("connect", () => {
       console.log(socket.connected);
     });
-    
-    console.log(":HERE");
+
     socket.on("message", (data) => {
-      console.log(socket.connected);
       console.log("DATA:", data);
     });
-  }, []);
+  }, [socket]);
 
   return <p>Hi this is a text</p>;
 }
