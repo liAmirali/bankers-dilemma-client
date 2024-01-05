@@ -26,20 +26,21 @@ const MainPage: FC = () => {
   }, []);
 
   return (
-    <div className="text-white flex flex-col items-center">
+    <div className="flex flex-col items-center">
       {games.map((game) => (
         <div
           key={game.game_id}
-          className="border rounded-lg shadow-md shadow-white flex flex-col items-center w-2/5 p-4 mb-4"
+          className="border rounded-lg shadow-md flex flex-col items-center w-2/5 p-8 mb-4 bg-white"
+          // className="flex justify-between"
         >
           <div className="flex items-center justify-between w-full">
             <div>
               <h2 className="text-3xl">{game.name}</h2>
-              <p className="text-sm text-neutral-300">ID: {game.game_id}</p>
+              <p className="text-sm text-neutral-600">ID: {game.game_id}</p>
               <p>{`${prettyDate(game.created_at)} (${fromNow(game.created_at)})`}</p>
             </div>
             {game.is_active && (
-              <div className="ml-2 p-2 rounded-full bg-green-600 text-center">Active</div>
+              <div className="ml-2 py-2 px-6 rounded-full bg-green-600 text-white text-center">Active</div>
             )}
           </div>
           <button
