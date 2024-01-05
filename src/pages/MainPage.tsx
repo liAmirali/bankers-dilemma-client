@@ -1,9 +1,16 @@
 import { FC, useEffect, useState } from "react";
 import { getGameList } from "../api/getGames";
 import { fromNow, prettyDate } from "../utils/time";
+import { useNavigate } from "react-router-dom";
 
 const MainPage: FC = () => {
   const [games, setGames] = useState<GameT[]>([]);
+
+  const navigate = useNavigate();
+
+  const handleJoinGame = (game: GameT) => {
+    navigate(`/play?gameId=${game.game_id}`);
+  };
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -35,7 +42,10 @@ const MainPage: FC = () => {
               <div className="ml-2 p-2 rounded-full bg-green-600 text-center">Active</div>
             )}
           </div>
-          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out focus:outline-none">
+          <button
+            onClick={() => handleJoinGame(game)}
+            className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out focus:outline-none"
+          >
             Join Game Room
           </button>
         </div>
