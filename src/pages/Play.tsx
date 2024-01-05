@@ -10,17 +10,12 @@ const Play: FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const gameId = searchParams.get("gameId");
 
-  const [player1, setPlayer1] = useState({
-    name: "Player 1",
-    score: 0,
-    history: ["confront", "cooperate", "confront", "confront"],
-  });
-  const [player2, setPlayer2] = useState({
-    name: "Player 2",
-    score: 0,
-    history: ["confront", "confront", "cooperate", "confront"],
-  });
-  const [playground, setPlayground] = useState({ name: "Playground", id: "12345" });
+  const [playerSocket, setPlayerSocket] = useState<Socket | null>(null);
+
+  const [players, setPlayers] = useState<[PlayerDataT | null, PlayerDataT | null]>([null, null]);
+  const [history, setHistory] = useState<TurnResultT[]>([]);
+
+  const [playground, setPlayground] = useState({ name: "Playground", id: gameId });
 
   useEffect(() => {
     let socket: Socket;
@@ -31,16 +26,39 @@ const Play: FC = () => {
       socket.on("connect", () => {
         console.log("Connected to server");
 
+        setPlayers((prevValues) => [{ sid: socket.id, score: 0, latestMove: null }, prevValues[1]]);
+
         socket.emit("join_game", { gameId: gameId });
       });
 
-      socket.on("start_game", () => {
-        console.log("STARTING GAME...");
+      socket.on("start_game", (data: GameRoomDetails) => {
+        console.log("STARTING GAME...", data);
+        setPlayers(data.players);
       });
 
-      socket.on("message", (data) => {
+      socket.on("results", (data: TurnResultT) => {
+        console.log("PLAYED:", data);
+
+        setHistory((prevHistory) => [...prevHistory, data]);
+        setPlayers((prevValue) => [
+          {
+            sid: prevValue[0]!.sid,
+            latestMove: data.moves[0].move,
+            score: prevValue[0]!.score + data.moves[0].score,
+          },
+          {
+            sid: prevValue[1]!.sid,
+            latestMove: data.moves[1].move,
+            score: prevValue[1]!.score + data.moves[1].score,
+          },
+        ]);
+      });
+
+      socket.on("message", (data: MessageT) => {
         console.log("DATA:", data);
       });
+
+      setPlayerSocket(socket);
     }
 
     return () => {
@@ -53,36 +71,56 @@ const Play: FC = () => {
   }, [gameId]);
 
   const handleConfront = () => {
-    // Emit event for confrontation
-    // socket.emit('confront', { /* any relevant data */ });
+    if (!playerSocket) {
+      alert("No socket there bitch");
+      return;
+    }
+
+    playerSocket.emit("play", { gameId: gameId, move: "confront" });
   };
 
   const handleCooperate = () => {
-    // Emit event for cooperation
-    // socket.emit('cooperate', { /* any relevant data */ });
+    if (!playerSocket) {
+      alert("No socket there bitch");
+      return;
+    }
+
+    playerSocket.emit("play", { gameId: gameId, move: "cooperate" });
   };
 
   if (!gameId) return <Navigate to="/" />;
 
   return (
     <div className="bg-gray-200 min-h-screen flex flex-col items-center justify-center">
-      <div className="flex justify-between w-4/5 p-8 bg-white rounded-lg shadow-md">
+      <div className="flex w-4/5 p-8 bg-white rounded-lg shadow-md">
         {/* Player 1 */}
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold">{player1.name}</h2>
-          <p>Score: {player1.score}</p>
+        <div className="flex flex-1 flex-col items-center">
+          {players[0] ? (
+            <>
+              <h2 className="text-xl font-semibold">{players[0].sid}</h2>
+              <p>Score: {players[0].score}</p>
+            </>
+          ) : (
+            <p>Not Joined</p>
+          )}
         </div>
 
         {/* Playground Details */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-[2] flex-col items-center">
           <h2 className="text-2xl font-bold">{playground.name}</h2>
           <p>ID: {playground.id}</p>
         </div>
 
         {/* Player 2 */}
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold">{player2.name}</h2>
-          <p>Score: {player2.score}</p>
+        <div className="flex flex-1 flex-col items-center">
+          {players[1] ? (
+            <>
+              <h2 className="text-xl font-semibold">{players[1].sid}</h2>
+              <p>Score: {players[1].score}</p>
+            </>
+          ) : (
+            <p>Not Joined</p>
+          )}
         </div>
       </div>
 
@@ -90,22 +128,22 @@ const Play: FC = () => {
       <div className="mt-8 flex justify-between w-4/5 overflow-auto">
         <div className="flex flex-col items-center">
           <div className="flex justify-center">
-            {player1.history.map((action, index) => (
+            {history.map((turnResult, index) => (
               <div
                 key={index}
                 className={`size-10 rounded-full mx-1 my-1 ${
-                  action === "confront" ? "bg-red-500" : "bg-green-500"
+                  turnResult.moves[0].move === "confront" ? "bg-red-500" : "bg-green-500"
                 }`}
               ></div>
             ))}
           </div>
 
           <div className="flex justify-center">
-            {player2.history.map((action, index) => (
+            {history.map((turnResult, index) => (
               <div
                 key={index}
                 className={`size-10 rounded-full mx-1 my-1 ${
-                  action === "confront" ? "bg-red-500" : "bg-green-500"
+                  turnResult.moves[1].move === "confront" ? "bg-red-500" : "bg-green-500"
                 }`}
               ></div>
             ))}
