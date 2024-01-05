@@ -1,5 +1,5 @@
 type GameT = {
-  game_id: number;
+  game_id: number | string;
   name: string;
   is_active: boolean;
   created_at: string;
