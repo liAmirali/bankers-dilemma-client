@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import "./App.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Socket, io } from "socket.io-client";
-import { BrowserRouter, Route, Router, Routes } from "react-router-dom";
+
 import MainPage from "./pages/MainPage";
 import Play from "./pages/Play";
+import MainTemplate from "./pages/MainTemplate";
 
 function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -35,8 +36,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/play" element={<Play />} />
+        <Route path="/" element={<MainTemplate />}>
+          <Route index element={<MainPage />} />
+          <Route path="/play" element={<Play />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
