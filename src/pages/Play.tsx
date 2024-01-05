@@ -1,11 +1,14 @@
 import { FC, useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Socket, io } from "socket.io-client";
 import { SOCKET_SERVER_ADDR } from "../env/variables";
+import { toast } from "react-toastify";
 
 // const socket = io(SOCKET_SERVER_ADDR);
 
 const Play: FC = () => {
+  const navigate = useNavigate();
+
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const gameId = searchParams.get("gameId");
@@ -55,7 +58,12 @@ const Play: FC = () => {
       });
 
       socket.on("message", (data: MessageT) => {
-        console.log("DATA:", data);
+        console.log("MSG:", data);
+        toast(data.message, { type: "default" });
+
+        if (data.code === 3) {
+          navigate("/");
+        }
       });
 
       setPlayerSocket(socket);
